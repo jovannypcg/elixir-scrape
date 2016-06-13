@@ -7,15 +7,16 @@ defmodule Scrape.Link do
     Takes the base path from a fully qualified absolute URL and expands the
     path of an unknown URL with it.
 
-    iex> Scrape.Link.expand("/some/path", "//example.com/ab/c")
-    "http://example.com/some/path"
+    ## Example
+        iex> Scrape.Link.expand("/some/path", "//example.com/ab/c")
+        "http://example.com/some/path"
   """
-
   def expand(nil, _base), do: nil
   def expand(target, base) do
     base_uri = base
     |> URI.parse
     |> put_lazy(:scheme, "http")
+
     target
     |> URI.parse
     |> put_lazy(:scheme, base_uri.scheme)
@@ -41,19 +42,29 @@ defmodule Scrape.Link do
 
     if uri.host do
       authority = uri.host
+
       if uri.userinfo, do: authority = uri.userinfo <> "@" <> authority
-      if uri.port, do: authority = authority <> ":" <> Integer.to_string(uri.port)
+
+      if uri.port do
+	authority = authority <> ":" <> Integer.to_string(uri.port)
+      end
     else
       authority = uri.authority
     end
 
     result = ""
 
-    if uri.scheme,   do: result = result <> uri.scheme <> ":"
-    if authority,    do: result = result <> "//" <> authority
+    if uri.scheme, do: result = result <> uri.scheme <> ":"
+    if authority, do: result = result <> "//" <> authority
+
     if uri.path do
-      result = if String.first(uri.path) == "/", do: result <> uri.path, else: result <> "/" <> uri.path
+      result = if String.first(uri.path) == "/" do
+	result <> uri.path
+      else
+	result <> "/" <> uri.path
+      end
     end
+
     if uri.query,    do: result = result <> "?" <> uri.query
     if uri.fragment, do: result = result <> "#" <> uri.fragment
 
